@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Tareas con Login</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #5efce8, #736efe);
+      margin: 0;
+      padding: 40px;
+      text-align: center;
+      color: #333;
+ 
+      min-height: 100vh;
+    }
+
+    h1, h2 {
+      color: #fff;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+ 
+    .login-container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 400px;
+      margin: 80px auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 25px;
+      border: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      outline: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      border-radius: 25px;
+      border: none;
+      background-color: #51108d;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    .toggle-form {
+      margin-top: 15px;
+      color: #fff;
+    }
+
+    .toggle-form a {
+      color: #ffb347;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+  
+    .app-container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .logout-btn {
+      background-color: #ff4b5c;
+    }
+
+    .input-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      font-size: 16px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 auto;
+      width: 80%;
+    }
+
+    li {
+      background: white;
+      margin: 10px 0;
+      padding: 12px 18px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+    }
+
+    li:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    .edit-btn {
+      background-color: #ffb347;
+      color: white;
+      margin-left: 5px;
+    }
+
+    .delete-btn {
+      background-color: #ff4b5c;
+      color: white;
+    }
+
+    .completada {
+      text-decoration: line-through;
+      color: gray;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  
+  <div id="loginScreen" class="login-container">
+    <h2> Iniciar Sesión</h2>
+    <div id="loginMsg"></div>
+    <input type="text" id="username" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Iniciar Sesión</button>
+    <div class="toggle-form">
+      ¿No tienes cuenta? <a onclick="toggleForm()">Regístrate aquí</a>
+    </div>
+  </div>
+
+
+  <div id="registerScreen" class="login-container hidden">
+    <h2>Crear Cuenta</h2>
+    <div id="registerMsg"></div>
+    <input type="text" id="newUsername" placeholder="Usuario">
+    <input type="password" id="newPassword" placeholder="Contraseña">
+    <input type="password" id="confirmPassword" placeholder="Confirmar Contraseña">
+    <button onclick="register()">Registrarse</button>
+    <div class="toggle-form">
+      ¿Ya tienes cuenta? <a onclick="toggleForm()">Inicia sesión aquí</a>
+    </div>
+  </div>
+
+  <div id="appScreen" class="app-container hidden">
+    <div class="app-header">
+      <h1>Mi Lista de Tareas</h1>
+      <div>
+        <span id="currentUser"></span>
+        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+      </div>
+    </div>
+
+    <div id="welcomeNotification" class="notification is-success is-light hidden" style="margin-bottom: 20px;">
+      ¡Bienvenido(a) de nuevo, <strong id="welcomeUsername"></strong>!
+    </div>
+    
+    <div class="input-container">
+      <input type="text" id="tarea" placeholder="Escribe una tarea...">
+      <button onclick="agregarTarea()">Agregar</button>
+    </div>
+
+    <ul id="lista"></ul>
+  </div>
+
+  <script>
+    const loginScreen = document.getElementById("loginScreen");
+    const registerScreen = document.getElementById("registerScreen");
+    const appScreen = document.getElementById("appScreen");
+    const currentUserSpan = document.getElementById("currentUser");
+    const welcomeNotification = document.getElementById("welcomeNotification");
+    const welcomeUsername = document.getElementById("welcomeUsername");
+
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+    let currentUser = localStorage.getItem("currentUser");
+
+    if (currentUser) mostrarApp();
+
+    function toggleForm() {
+      loginScreen.classList.toggle("hidden");
+      registerScreen.classList.toggle("hidden");
+    }
+
+    function register() {
+      const u = document.getElementById("newUsername").value.trim();
+      const p = document.getElementById("newPassword").value;
+      const c = document.getElementById("confirmPassword").value;
+      const msg = document.getElementById("registerMsg");
+
+      if (!u || !p || !c) return msg.textContent = "Completa todos los campos.";
+      if (p !== c) return msg.textContent = " Las contraseñas no coinciden.";
+      if (users[u]) return msg.textContent = "El usuario ya existe.";
+
+      users[u] = { password: p, tareas: [] };
+      localStorage.setItem("users", JSON.stringify(users));
+      msg.textContent = "Cuenta creada. Ve a iniciar sesión.";
+      setTimeout(toggleForm, 1000);
+    }
+
+    function login() {
+      const u = document.getElementById("username").value.trim();
+      const p = document.getElementById("password").value;
+      const msg = document.getElementById("loginMsg");
+
+      if (!users[u] || users[u].password !== p)
+        return msg.textContent = "Usuario o contraseña incorrectos.";
+
+      currentUser = u;
+      localStorage.setItem("currentUser", u);
+      mostrarApp(true); 
+    }
+
+    function logout() {
+      localStorage.removeItem("currentUser");
+      currentUser = null;
+      appScreen.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+    }
+
+    function mostrarApp(justLoggedIn = false) {
+      loginScreen.classList.add("hidden");
+      registerScreen.classList.add("hidden");
+      appScreen.classList.remove("hidden");
+      currentUserSpan.textContent = "👤 " + currentUser;
+      renderTareas();
+
+      if (justLoggedIn) {
+        showWelcomeMessage();
+      }
+    }
+
+    function showWelcomeMessage() {
+      welcomeUsername.textContent = currentUser;
+      welcomeNotification.classList.remove("hidden");
+   
+      setTimeout(() => {
+        welcomeNotification.classList.add("hidden");
+      }, 3000);
+    }
+
+    const lista = document.getElementById("lista");
+    const inputTarea = document.getElementById("tarea");
+
+    inputTarea.addEventListener("keypress", e => {
+      if (e.key === "Enter") agregarTarea();
+    });
+
+    function guardar() {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function agregarTarea() {
+      const texto = inputTarea.value.trim();
+      if (!texto) return;
+      const tarea = { texto, completada: false };
+      users[currentUser].tareas.push(tarea);
+      guardar();
+      inputTarea.value = "";
+      renderTareas();
+    }
+
+    function toggleCompletada(index) {
+      const tarea = users[currentUser].tareas[index];
+      tarea.completada = !tarea.completada;
+      guardar();
+      renderTareas();
+    }
+
+    function editarTarea(index) {
+      const nuevoTexto = prompt("Editar tarea:", users[currentUser].tareas[index].texto);
+      if (nuevoTexto && nuevoTexto.trim() !== "") {
+        users[currentUser].tareas[index].texto = nuevoTexto.trim();
+        guardar();
+        renderTareas();
+      }
+    }
+
+    function eliminarTarea(index) {
+      users[currentUser].tareas.splice(index, 1);
+      guardar();
+      renderTareas();
+    }
+
+    function renderTareas() {
+      lista.innerHTML = "";
+      users[currentUser].tareas.forEach((t, i) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span class="${t.completada ? 'completada' : ''}" onclick="toggleCompletada(${i})">${t.texto}</span>
+          <div>
+            <button class="edit-btn" onclick="editarTarea(${i})">Editar</button>
+            <button class="delete-btn" onclick="eliminarTarea(${i})">Eliminar</button>
+          </div>`;
+        lista.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
+
